@@ -230,8 +230,8 @@ function PaymentPage() {
             <img
               src={movie.poster}
               alt=""
-              width={1024}
-              height={1536}
+              width={600}
+              height={890}
               className="aspect-[2/3] w-16 shrink-0 object-cover"
             />
             <div className="min-w-0 text-sm">

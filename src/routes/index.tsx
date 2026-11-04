@@ -94,12 +94,12 @@ function Index() {
           >
             <img
               key={i === heroIndex ? `${m.slug}-on` : m.slug}
-              src={m.poster}
+              src={m.backdrop}
               alt=""
-              width={1024}
-              height={1536}
+              width={1280}
+              height={720}
               className={cn(
-                "h-full w-full object-cover object-top opacity-30 mix-blend-luminosity",
+                "h-full w-full object-cover opacity-40",
                 i === heroIndex && "animate-ken-burns",
               )}
             />
@@ -181,8 +181,8 @@ function Index() {
               <img
                 src={featured.poster}
                 alt={`Cartaz do filme ${featured.title}`}
-                width={1024}
-                height={1536}
+                width={600}
+                height={890}
                 className="aspect-[2/3] w-full object-cover shadow-[0_30px_60px_-15px_rgba(0,0,0,0.9),0_0_60px_-10px_rgba(90,74,154,0.8)]"
               />
             </div>
@@ -297,8 +297,8 @@ function Index() {
                   <img
                     src={movie.poster}
                     alt={`Cartaz do filme ${movie.title}`}
-                    width={1024}
-                    height={1536}
+                    width={600}
+                    height={890}
                     loading="lazy"
                     className="aspect-[2/3] w-full object-cover transition duration-500 group-hover:scale-110 group-hover:brightness-110"
                   />

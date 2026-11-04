@@ -37,19 +37,19 @@ function MovieDetail() {
     <div className="pb-20">
       <section className="relative isolate overflow-hidden">
         <img
-          src={movie.poster}
+          src={movie.backdrop}
           alt=""
-          width={1024}
-          height={1536}
-          className="animate-ken-burns absolute inset-0 -z-10 h-full w-full object-cover object-top opacity-25 blur-sm"
+          width={1280}
+          height={720}
+          className="animate-ken-burns absolute inset-0 -z-10 h-full w-full object-cover opacity-30"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/60 via-background/85 to-background" />
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 md:grid-cols-[300px_1fr]">
           <img
             src={movie.poster}
             alt={`Cartaz do filme ${movie.title}`}
-            width={1024}
-            height={1536}
+            width={600}
+            height={890}
             className="animate-poster-in mx-auto w-40 self-start rounded-sm sm:w-56 md:w-full border border-border shadow-[0_30px_60px_-15px_rgba(0,0,0,0.9),0_0_60px_-10px_rgba(90,74,154,0.8)]"
           />
           <div className="animate-fade-up flex flex-col gap-4" style={{ animationDelay: "200ms" }}>
@@ -57,7 +57,12 @@ function MovieDetail() {
               {movie.genre}
             </span>
             <h1 className="font-display text-4xl leading-none sm:text-6xl">{movie.title}</h1>
-            <p className="text-base italic text-muted-foreground sm:text-lg">“{movie.tagline}”</p>
+            {movie.originalTitle && (
+              <p className="-mt-2 text-sm text-muted-foreground">
+                Título original: <span className="italic">{movie.originalTitle}</span>
+              </p>
+            )}
+            <p className="text-base text-muted-foreground sm:text-lg">{movie.tagline}</p>
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <AgeBadge rating={movie.ageRating} />
               <span>{movie.year}</span>

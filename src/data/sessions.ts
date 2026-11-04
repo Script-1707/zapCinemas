@@ -67,6 +67,28 @@ const SESSION_TEMPLATES: { time: string; format: SessionFormat }[][] = [
   ],
 ];
 
+/**
+ * Ajusta o modelo de sessões ao filme: só os filmes IMAX passam na Sala IMAX
+ * (na última sessão do dia) e os filmes infantis só têm versão dobrada.
+ */
+function adaptTemplate(
+  template: { time: string; format: SessionFormat }[],
+  imax: boolean,
+  dubbedOnly: boolean,
+): { time: string; format: SessionFormat }[] {
+  const slots = template.map((slot) => {
+    let format = slot.format;
+    if (format === "IMAX" && !imax) format = "2D Legendado";
+    if (dubbedOnly && format === "2D Legendado") format = "2D Dobrado";
+    return { ...slot, format };
+  });
+  if (imax && !slots.some((s) => s.format === "IMAX")) {
+    const last = slots[slots.length - 1];
+    if (last) slots[slots.length - 1] = { ...last, format: "IMAX" };
+  }
+  return slots;
+}
+
 function roomFor(format: SessionFormat): string {
   if (format === "IMAX") return "Sala IMAX";
   if (format === "VIP") return "Sala VIP 2";
@@ -79,7 +101,12 @@ export function getSessionsForDay(movieSlug: string, dayOffset: number): Session
     0,
     movies.findIndex((m) => m.slug === movieSlug),
   );
-  const template = SESSION_TEMPLATES[movieIndex % SESSION_TEMPLATES.length];
+  const movie = movies[movieIndex];
+  const template = adaptTemplate(
+    SESSION_TEMPLATES[movieIndex % SESSION_TEMPLATES.length] ?? [],
+    movie?.imax ?? false,
+    movie?.dubbedOnly ?? false,
+  );
   const rotation = (dayOffset + movieIndex) % template.length;
   const weekday = weekdayForOffset(dayOffset);
   return template.map((_, i) => {

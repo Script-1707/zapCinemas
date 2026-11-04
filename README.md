@@ -4,8 +4,10 @@ Front-end de um site de cinema com a identidade visual da **ZAP Cinemas**
 (Luanda, Angola): filmes em exibição, detalhes e trailer, bilheteira online com
 escolha de dia, sessão e lugares, e preçário.
 
-> **Demonstração:** é só front-end. Os filmes, as sessões e os lugares ocupados
-> são dados de exemplo gerados no próprio código. Os pagamentos são simulados e
+> **Demonstração:** é só front-end. Os filmes são os que estavam em exibição no
+> ZAP Cinemas Shopping Avenida na semana de 4 de novembro de 2026 (fonte:
+> filmSPOT), mas os horários das sessões e os lugares ocupados são gerados no
+> próprio código. Os pagamentos são simulados e
 > as compras ficam guardadas no browser (`localStorage`) do dispositivo.
 
 ---
@@ -155,11 +157,12 @@ src/
 │   ├── age-badge.tsx                       # Classificação etária
 │   └── ui/                                 # Componentes base (shadcn/ui)
 ├── data/
-│   ├── movies.ts                           # Filmes (exemplo)
+│   ├── movies.ts                           # Filmes em exibição
 │   ├── sessions.ts                         # Sessões, tarifas, lugares ocupados
 │   ├── prices.ts                           # Preçário ZAP Cinemas
 │   └── bookings.ts                         # Compras, pagamentos e referências
-├── assets/posters/                         # Cartazes dos filmes de exemplo
+├── assets/posters/                         # Cartazes dos filmes (600×890)
+├── assets/backdrops/                       # Imagens horizontais para fundos (1280×720)
 └── styles.css                              # Tokens da marca e animações
 public/                                     # Ícones, manifest, robots.txt
 ```
@@ -167,8 +170,11 @@ public/                                     # Ícones, manifest, robots.txt
 ### Onde mudar o quê
 
 - **Filmes:** [`src/data/movies.ts`](src/data/movies.ts). Cada filme tem
-  título, sinopse, género, duração, classificação, cartaz e id do trailer no
-  YouTube.
+  título (e título original), sinopse, género, duração, classificação (M/6 a
+  M/16), cartaz, imagem de fundo e id do trailer no YouTube. `imax: true` dá-lhe
+  sessões na Sala IMAX; `dubbedOnly: true` deixa só sessões dobradas (filmes
+  infantis). Os três primeiros da lista aparecem no banner principal. Para
+  mudar o cartaz da semana, troque a lista e as imagens.
 - **Horários e formatos das sessões:** `SESSION_TEMPLATES` em
   [`src/data/sessions.ts`](src/data/sessions.ts).
 - **Preços:** [`src/data/prices.ts`](src/data/prices.ts). O preço da Sala VIP
