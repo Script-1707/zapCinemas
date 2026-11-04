@@ -13,7 +13,7 @@ export function AgeBadge({ rating }: { rating: AgeRating }) {
     <span
       className={cn(
         "inline-flex h-6 shrink-0 items-center rounded-md border px-2 font-display text-sm leading-none",
-        RATING_STYLES[rating]
+        RATING_STYLES[rating],
       )}
     >
       {rating}

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrecarioRouteImport } from './routes/precario'
 import { Route as BilheteriaSlugRouteImport } from './routes/bilheteria.$slug'
 import { Route as FilmesSlugRouteImport } from './routes/filmes.$slug'
 import { Route as BilheteriaSlugIndexRouteImport } from './routes/bilheteria.$slug.index'
@@ -18,6 +19,11 @@ import { Route as BilheteriaSlugSessaoIdLugaresRouteImport } from './routes/bilh
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrecarioRoute = PrecarioRouteImport.update({
+  id: '/precario',
+  path: '/precario',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BilheteriaSlugRoute = BilheteriaSlugRouteImport.update({
@@ -44,6 +50,7 @@ const BilheteriaSlugSessaoIdLugaresRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/precario': typeof PrecarioRoute
   '/bilheteria/$slug': typeof BilheteriaSlugRouteWithChildren
   '/filmes/$slug': typeof FilmesSlugRoute
   '/bilheteria/$slug/': typeof BilheteriaSlugIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/precario': typeof PrecarioRoute
   '/filmes/$slug': typeof FilmesSlugRoute
   '/bilheteria/$slug': typeof BilheteriaSlugIndexRoute
   '/bilheteria/$slug/$sessaoId/lugares': typeof BilheteriaSlugSessaoIdLugaresRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/precario': typeof PrecarioRoute
   '/bilheteria/$slug': typeof BilheteriaSlugRouteWithChildren
   '/filmes/$slug': typeof FilmesSlugRoute
   '/bilheteria/$slug/': typeof BilheteriaSlugIndexRoute
@@ -67,6 +76,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/precario'
     | '/bilheteria/$slug'
     | '/filmes/$slug'
     | '/bilheteria/$slug/'
@@ -74,12 +84,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/precario'
     | '/filmes/$slug'
     | '/bilheteria/$slug'
     | '/bilheteria/$slug/$sessaoId/lugares'
   id:
     | '__root__'
     | '/'
+    | '/precario'
     | '/bilheteria/$slug'
     | '/filmes/$slug'
     | '/bilheteria/$slug/'
@@ -88,6 +100,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PrecarioRoute: typeof PrecarioRoute
   BilheteriaSlugRoute: typeof BilheteriaSlugRouteWithChildren
   FilmesSlugRoute: typeof FilmesSlugRoute
 }
@@ -99,6 +112,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/precario': {
+      id: '/precario'
+      path: '/precario'
+      fullPath: '/precario'
+      preLoaderRoute: typeof PrecarioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bilheteria/$slug': {
@@ -148,6 +168,7 @@ const BilheteriaSlugRouteWithChildren = BilheteriaSlugRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PrecarioRoute: PrecarioRoute,
   BilheteriaSlugRoute: BilheteriaSlugRouteWithChildren,
   FilmesSlugRoute: FilmesSlugRoute,
 }

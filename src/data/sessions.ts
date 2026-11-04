@@ -1,6 +1,7 @@
 import { movies } from "./movies";
+import { getTicketPrice } from "./prices";
 
-export type SessionFormat = "2D Legendado" | "2D Dublado" | "VIP" | "IMAX";
+export type SessionFormat = "2D Legendado" | "2D Dobrado" | "3D" | "VIP" | "IMAX";
 
 export interface Session {
   id: string;
@@ -10,6 +11,8 @@ export interface Session {
   format: SessionFormat;
   room: string;
   price: number;
+  /** Nome da tarifa do preçário aplicada (ex.: "Bilhete Quartas Loucas 2D"). */
+  tariff: string;
 }
 
 export interface DayOption {
@@ -20,28 +23,45 @@ export interface DayOption {
   label: string; // "Hoje" | "Amanhã" | dia da semana
 }
 
-export const FORMAT_PRICES: Record<SessionFormat, number> = {
-  "2D Legendado": 32.9,
-  "2D Dublado": 29.9,
-  VIP: 49.9,
-  IMAX: 59.9,
-};
+/**
+ * A Sala VIP não aparece no preçário público da ZAP: valor provisório,
+ * a confirmar com o cinema.
+ */
+const VIP_PRICE = 7500;
+
+/** Tarifa do preçário para um formato num dado dia (0 = domingo … 6 = sábado). */
+export function tariffFor(format: SessionFormat, weekday: number): { name: string; price: number } {
+  if (format === "VIP") return { name: "Bilhete Sala VIP", price: VIP_PRICE };
+  if (format === "IMAX") {
+    const imax = getTicketPrice("imax");
+    return { name: imax.name, price: imax.price };
+  }
+  const dim = format === "3D" ? "3d" : "2d";
+  const kind = weekday === 3 ? "quartas" : weekday >= 1 && weekday <= 4 ? "economico" : "normal";
+  const item = getTicketPrice(`${kind}-${dim}`);
+  return { name: item.name, price: item.price };
+}
+
+function weekdayForOffset(dayOffset: number): number {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset).getDay();
+}
 
 const SESSION_TEMPLATES: { time: string; format: SessionFormat }[][] = [
   [
     { time: "14:30", format: "2D Legendado" },
     { time: "17:15", format: "VIP" },
-    { time: "20:00", format: "2D Dublado" },
+    { time: "20:00", format: "2D Dobrado" },
     { time: "22:30", format: "2D Legendado" },
   ],
   [
-    { time: "13:00", format: "2D Dublado" },
+    { time: "13:00", format: "2D Dobrado" },
     { time: "16:00", format: "2D Legendado" },
     { time: "19:00", format: "IMAX" },
-    { time: "21:45", format: "2D Dublado" },
+    { time: "21:45", format: "2D Dobrado" },
   ],
   [
-    { time: "15:30", format: "2D Dublado" },
+    { time: "15:30", format: "3D" },
     { time: "18:00", format: "VIP" },
     { time: "20:45", format: "2D Legendado" },
   ],
@@ -50,16 +70,18 @@ const SESSION_TEMPLATES: { time: string; format: SessionFormat }[][] = [
 function roomFor(format: SessionFormat): string {
   if (format === "IMAX") return "Sala IMAX";
   if (format === "VIP") return "Sala VIP 2";
+  if (format === "3D") return "Sala 5";
   return "Sala 3";
 }
 
 export function getSessionsForDay(movieSlug: string, dayOffset: number): Session[] {
   const movieIndex = Math.max(
     0,
-    movies.findIndex((m) => m.slug === movieSlug)
+    movies.findIndex((m) => m.slug === movieSlug),
   );
   const template = SESSION_TEMPLATES[movieIndex % SESSION_TEMPLATES.length];
   const rotation = (dayOffset + movieIndex) % template.length;
+  const weekday = weekdayForOffset(dayOffset);
   return template.map((_, i) => {
     const slot = template[(i + rotation) % template.length];
     return {
@@ -69,7 +91,10 @@ export function getSessionsForDay(movieSlug: string, dayOffset: number): Session
       time: slot.time,
       format: slot.format,
       room: roomFor(slot.format),
-      price: FORMAT_PRICES[slot.format],
+      ...(() => {
+        const t = tariffFor(slot.format, weekday);
+        return { price: t.price, tariff: t.name };
+      })(),
     };
   });
 }
@@ -87,8 +112,8 @@ export function getSession(sessionId: string): Session | undefined {
 
 export function getDays(): DayOption[] {
   const now = new Date();
-  const weekdayFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "short" });
-  const monthFmt = new Intl.DateTimeFormat("pt-BR", { month: "short" });
+  const weekdayFmt = new Intl.DateTimeFormat("pt-AO", { weekday: "short" });
+  const monthFmt = new Intl.DateTimeFormat("pt-AO", { month: "short" });
   return Array.from({ length: 5 }, (_, offset) => {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
     const weekday = weekdayFmt.format(d).replace(".", "");
@@ -103,7 +128,10 @@ export function getDays(): DayOption[] {
 }
 
 export function formatPrice(value: number): string {
-  return `R$ ${value.toFixed(2).replace(".", ",")}`;
+  // Formato do preçário ZAP: "2.200 Kz" (ponto como separador de milhares).
+  return `${Math.round(value)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".")} Kz`;
 }
 
 export function formatDuration(min: number): string {
@@ -149,5 +177,5 @@ export function getOccupiedSeats(sessionId: string): Set<string> {
 
 export function ticketCode(sessionId: string, seats: string[]): string {
   const n = hashString(`${sessionId}|${[...seats].sort().join(",")}`) % 100000;
-  return `AUR-${String(n).padStart(5, "0")}`;
+  return `ZAP-${String(n).padStart(5, "0")}`;
 }
