@@ -10,33 +10,86 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BilheteriaSlugRouteImport } from './routes/bilheteria.$slug'
+import { Route as FilmesSlugRouteImport } from './routes/filmes.$slug'
+import { Route as BilheteriaSlugIndexRouteImport } from './routes/bilheteria.$slug.index'
+import { Route as BilheteriaSlugSessaoIdLugaresRouteImport } from './routes/bilheteria.$slug.$sessaoId.lugares'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BilheteriaSlugRoute = BilheteriaSlugRouteImport.update({
+  id: '/bilheteria/$slug',
+  path: '/bilheteria/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FilmesSlugRoute = FilmesSlugRouteImport.update({
+  id: '/filmes/$slug',
+  path: '/filmes/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BilheteriaSlugIndexRoute = BilheteriaSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BilheteriaSlugRoute,
+} as any)
+const BilheteriaSlugSessaoIdLugaresRoute =
+  BilheteriaSlugSessaoIdLugaresRouteImport.update({
+    id: '/$sessaoId/lugares',
+    path: '/$sessaoId/lugares',
+    getParentRoute: () => BilheteriaSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bilheteria/$slug': typeof BilheteriaSlugRouteWithChildren
+  '/filmes/$slug': typeof FilmesSlugRoute
+  '/bilheteria/$slug/': typeof BilheteriaSlugIndexRoute
+  '/bilheteria/$slug/$sessaoId/lugares': typeof BilheteriaSlugSessaoIdLugaresRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/filmes/$slug': typeof FilmesSlugRoute
+  '/bilheteria/$slug': typeof BilheteriaSlugIndexRoute
+  '/bilheteria/$slug/$sessaoId/lugares': typeof BilheteriaSlugSessaoIdLugaresRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bilheteria/$slug': typeof BilheteriaSlugRouteWithChildren
+  '/filmes/$slug': typeof FilmesSlugRoute
+  '/bilheteria/$slug/': typeof BilheteriaSlugIndexRoute
+  '/bilheteria/$slug/$sessaoId/lugares': typeof BilheteriaSlugSessaoIdLugaresRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/bilheteria/$slug'
+    | '/filmes/$slug'
+    | '/bilheteria/$slug/'
+    | '/bilheteria/$slug/$sessaoId/lugares'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/filmes/$slug'
+    | '/bilheteria/$slug'
+    | '/bilheteria/$slug/$sessaoId/lugares'
+  id:
+    | '__root__'
+    | '/'
+    | '/bilheteria/$slug'
+    | '/filmes/$slug'
+    | '/bilheteria/$slug/'
+    | '/bilheteria/$slug/$sessaoId/lugares'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BilheteriaSlugRoute: typeof BilheteriaSlugRouteWithChildren
+  FilmesSlugRoute: typeof FilmesSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +101,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bilheteria/$slug': {
+      id: '/bilheteria/$slug'
+      path: '/bilheteria/$slug'
+      fullPath: '/bilheteria/$slug'
+      preLoaderRoute: typeof BilheteriaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/filmes/$slug': {
+      id: '/filmes/$slug'
+      path: '/filmes/$slug'
+      fullPath: '/filmes/$slug'
+      preLoaderRoute: typeof FilmesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bilheteria/$slug/': {
+      id: '/bilheteria/$slug/'
+      path: '/'
+      fullPath: '/bilheteria/$slug/'
+      preLoaderRoute: typeof BilheteriaSlugIndexRouteImport
+      parentRoute: typeof BilheteriaSlugRoute
+    }
+    '/bilheteria/$slug/$sessaoId/lugares': {
+      id: '/bilheteria/$slug/$sessaoId/lugares'
+      path: '/$sessaoId/lugares'
+      fullPath: '/bilheteria/$slug/$sessaoId/lugares'
+      preLoaderRoute: typeof BilheteriaSlugSessaoIdLugaresRouteImport
+      parentRoute: typeof BilheteriaSlugRoute
+    }
   }
 }
 
+interface BilheteriaSlugRouteChildren {
+  BilheteriaSlugIndexRoute: typeof BilheteriaSlugIndexRoute
+  BilheteriaSlugSessaoIdLugaresRoute: typeof BilheteriaSlugSessaoIdLugaresRoute
+}
+
+const BilheteriaSlugRouteChildren: BilheteriaSlugRouteChildren = {
+  BilheteriaSlugIndexRoute: BilheteriaSlugIndexRoute,
+  BilheteriaSlugSessaoIdLugaresRoute: BilheteriaSlugSessaoIdLugaresRoute,
+}
+
+const BilheteriaSlugRouteWithChildren = BilheteriaSlugRoute._addFileChildren(
+  BilheteriaSlugRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BilheteriaSlugRoute: BilheteriaSlugRouteWithChildren,
+  FilmesSlugRoute: FilmesSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
