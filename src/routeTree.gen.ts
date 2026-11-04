@@ -12,9 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrecarioRouteImport } from './routes/precario'
 import { Route as BilheteriaSlugRouteImport } from './routes/bilheteria.$slug'
+import { Route as BilhetesIndexRouteImport } from './routes/bilhetes.index'
+import { Route as BilhetesCodigoRouteImport } from './routes/bilhetes.$codigo'
 import { Route as FilmesSlugRouteImport } from './routes/filmes.$slug'
 import { Route as BilheteriaSlugIndexRouteImport } from './routes/bilheteria.$slug.index'
 import { Route as BilheteriaSlugSessaoIdLugaresRouteImport } from './routes/bilheteria.$slug.$sessaoId.lugares'
+import { Route as BilheteriaSlugSessaoIdPagamentoRouteImport } from './routes/bilheteria.$slug.$sessaoId.pagamento'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +32,16 @@ const PrecarioRoute = PrecarioRouteImport.update({
 const BilheteriaSlugRoute = BilheteriaSlugRouteImport.update({
   id: '/bilheteria/$slug',
   path: '/bilheteria/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BilhetesIndexRoute = BilhetesIndexRouteImport.update({
+  id: '/bilhetes/',
+  path: '/bilhetes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BilhetesCodigoRoute = BilhetesCodigoRouteImport.update({
+  id: '/bilhetes/$codigo',
+  path: '/bilhetes/$codigo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FilmesSlugRoute = FilmesSlugRouteImport.update({
@@ -47,30 +60,45 @@ const BilheteriaSlugSessaoIdLugaresRoute =
     path: '/$sessaoId/lugares',
     getParentRoute: () => BilheteriaSlugRoute,
   } as any)
+const BilheteriaSlugSessaoIdPagamentoRoute =
+  BilheteriaSlugSessaoIdPagamentoRouteImport.update({
+    id: '/$sessaoId/pagamento',
+    path: '/$sessaoId/pagamento',
+    getParentRoute: () => BilheteriaSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/precario': typeof PrecarioRoute
   '/bilheteria/$slug': typeof BilheteriaSlugRouteWithChildren
+  '/bilhetes/$codigo': typeof BilhetesCodigoRoute
   '/filmes/$slug': typeof FilmesSlugRoute
+  '/bilhetes/': typeof BilhetesIndexRoute
   '/bilheteria/$slug/': typeof BilheteriaSlugIndexRoute
   '/bilheteria/$slug/$sessaoId/lugares': typeof BilheteriaSlugSessaoIdLugaresRoute
+  '/bilheteria/$slug/$sessaoId/pagamento': typeof BilheteriaSlugSessaoIdPagamentoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/precario': typeof PrecarioRoute
+  '/bilhetes/$codigo': typeof BilhetesCodigoRoute
   '/filmes/$slug': typeof FilmesSlugRoute
+  '/bilhetes': typeof BilhetesIndexRoute
   '/bilheteria/$slug': typeof BilheteriaSlugIndexRoute
   '/bilheteria/$slug/$sessaoId/lugares': typeof BilheteriaSlugSessaoIdLugaresRoute
+  '/bilheteria/$slug/$sessaoId/pagamento': typeof BilheteriaSlugSessaoIdPagamentoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/precario': typeof PrecarioRoute
   '/bilheteria/$slug': typeof BilheteriaSlugRouteWithChildren
+  '/bilhetes/$codigo': typeof BilhetesCodigoRoute
   '/filmes/$slug': typeof FilmesSlugRoute
+  '/bilhetes/': typeof BilhetesIndexRoute
   '/bilheteria/$slug/': typeof BilheteriaSlugIndexRoute
   '/bilheteria/$slug/$sessaoId/lugares': typeof BilheteriaSlugSessaoIdLugaresRoute
+  '/bilheteria/$slug/$sessaoId/pagamento': typeof BilheteriaSlugSessaoIdPagamentoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,31 +106,42 @@ export interface FileRouteTypes {
     | '/'
     | '/precario'
     | '/bilheteria/$slug'
+    | '/bilhetes/$codigo'
     | '/filmes/$slug'
+    | '/bilhetes/'
     | '/bilheteria/$slug/'
     | '/bilheteria/$slug/$sessaoId/lugares'
+    | '/bilheteria/$slug/$sessaoId/pagamento'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/precario'
+    | '/bilhetes/$codigo'
     | '/filmes/$slug'
+    | '/bilhetes'
     | '/bilheteria/$slug'
     | '/bilheteria/$slug/$sessaoId/lugares'
+    | '/bilheteria/$slug/$sessaoId/pagamento'
   id:
     | '__root__'
     | '/'
     | '/precario'
     | '/bilheteria/$slug'
+    | '/bilhetes/$codigo'
     | '/filmes/$slug'
+    | '/bilhetes/'
     | '/bilheteria/$slug/'
     | '/bilheteria/$slug/$sessaoId/lugares'
+    | '/bilheteria/$slug/$sessaoId/pagamento'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrecarioRoute: typeof PrecarioRoute
   BilheteriaSlugRoute: typeof BilheteriaSlugRouteWithChildren
+  BilhetesCodigoRoute: typeof BilhetesCodigoRoute
   FilmesSlugRoute: typeof FilmesSlugRoute
+  BilhetesIndexRoute: typeof BilhetesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,6 +167,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BilheteriaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bilhetes/': {
+      id: '/bilhetes/'
+      path: '/bilhetes'
+      fullPath: '/bilhetes/'
+      preLoaderRoute: typeof BilhetesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bilhetes/$codigo': {
+      id: '/bilhetes/$codigo'
+      path: '/bilhetes/$codigo'
+      fullPath: '/bilhetes/$codigo'
+      preLoaderRoute: typeof BilhetesCodigoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/filmes/$slug': {
       id: '/filmes/$slug'
       path: '/filmes/$slug'
@@ -149,17 +202,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BilheteriaSlugSessaoIdLugaresRouteImport
       parentRoute: typeof BilheteriaSlugRoute
     }
+    '/bilheteria/$slug/$sessaoId/pagamento': {
+      id: '/bilheteria/$slug/$sessaoId/pagamento'
+      path: '/$sessaoId/pagamento'
+      fullPath: '/bilheteria/$slug/$sessaoId/pagamento'
+      preLoaderRoute: typeof BilheteriaSlugSessaoIdPagamentoRouteImport
+      parentRoute: typeof BilheteriaSlugRoute
+    }
   }
 }
 
 interface BilheteriaSlugRouteChildren {
   BilheteriaSlugIndexRoute: typeof BilheteriaSlugIndexRoute
   BilheteriaSlugSessaoIdLugaresRoute: typeof BilheteriaSlugSessaoIdLugaresRoute
+  BilheteriaSlugSessaoIdPagamentoRoute: typeof BilheteriaSlugSessaoIdPagamentoRoute
 }
 
 const BilheteriaSlugRouteChildren: BilheteriaSlugRouteChildren = {
   BilheteriaSlugIndexRoute: BilheteriaSlugIndexRoute,
   BilheteriaSlugSessaoIdLugaresRoute: BilheteriaSlugSessaoIdLugaresRoute,
+  BilheteriaSlugSessaoIdPagamentoRoute: BilheteriaSlugSessaoIdPagamentoRoute,
 }
 
 const BilheteriaSlugRouteWithChildren = BilheteriaSlugRoute._addFileChildren(
@@ -170,7 +232,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrecarioRoute: PrecarioRoute,
   BilheteriaSlugRoute: BilheteriaSlugRouteWithChildren,
+  BilhetesCodigoRoute: BilhetesCodigoRoute,
   FilmesSlugRoute: FilmesSlugRoute,
+  BilhetesIndexRoute: BilhetesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

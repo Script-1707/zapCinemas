@@ -12,6 +12,7 @@ import { useEffect, useState, type CSSProperties, type FormEvent, type ReactNode
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { useBookings, useHydrated } from "../data/bookings";
 
 function NotFoundComponent() {
   return (
@@ -150,7 +151,50 @@ const NAV_LINKS = [
   { label: "Serviços", href: "/#servicos" },
   { label: "Campanhas", href: "/#campanhas" },
   { label: "Preçário", href: "/precario" },
+  { label: "Os meus bilhetes", href: "/bilhetes" },
 ];
+
+/** Atalho para "Os meus bilhetes", com o número de compras deste dispositivo. */
+function MyTicketsLink({ label = false }: { label?: boolean }) {
+  const hydrated = useHydrated();
+  const count = useBookings().length;
+  return (
+    <Link
+      to="/bilhetes"
+      aria-label={`Os meus bilhetes${hydrated && count ? ` (${count})` : ""}`}
+      className={
+        label
+          ? "relative flex items-center gap-2 whitespace-nowrap rounded-sm border border-primary px-3 py-1.5 text-primary transition hover:bg-primary hover:text-primary-foreground"
+          : "relative flex h-11 w-11 items-center justify-center text-foreground"
+      }
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M3 7h18v3a2 2 0 000 4v3H3v-3a2 2 0 000-4z" />
+        <path d="M14 7v10" strokeDasharray="2 2" />
+      </svg>
+      {label && <span>Os meus bilhetes</span>}
+      {hydrated && count > 0 && (
+        <span
+          className={
+            label
+              ? "rounded-full bg-primary px-1.5 text-[11px] leading-5 text-primary-foreground"
+              : "absolute right-1 top-1.5 min-w-5 rounded-full bg-primary px-1 text-center text-[11px] font-bold leading-5 text-primary-foreground"
+          }
+        >
+          {count}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -185,8 +229,8 @@ function SiteHeader() {
           <Link to="/" aria-label="ZAP Cinemas — início">
             <ZapWordmark className="text-xl" />
           </Link>
-          <nav className="hidden items-center gap-5 text-[13px] font-bold uppercase tracking-wide md:flex">
-            {NAV_LINKS.map((l) => (
+          <nav className="hidden items-center gap-5 text-[13px] font-bold uppercase tracking-wide lg:flex">
+            {NAV_LINKS.filter((l) => l.href !== "/bilhetes").map((l) => (
               <a
                 key={l.label}
                 href={l.href}
@@ -195,27 +239,35 @@ function SiteHeader() {
                 {l.label}
               </a>
             ))}
+            <MyTicketsLink label />
           </nav>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-expanded={menuOpen}
-            aria-controls="menu-movel"
-            aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-            className="-mr-2 flex h-11 w-11 items-center justify-center text-foreground md:hidden"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden
+          <div className="flex items-center gap-1 lg:hidden">
+            <MyTicketsLink />
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-expanded={menuOpen}
+              aria-controls="menu-movel"
+              aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+              className="-mr-2 flex h-11 w-11 items-center justify-center text-foreground"
             >
-              {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-            </svg>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden
+              >
+                {menuOpen ? (
+                  <path d="M6 6l12 12M18 6L6 18" />
+                ) : (
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       <div className="brand-line" />
@@ -224,7 +276,7 @@ function SiteHeader() {
       {menuOpen && (
         <div
           id="menu-movel"
-          className="animate-in fade-in fixed inset-x-0 bottom-0 top-[calc(3.5rem+4px)] z-40 overflow-y-auto bg-black/95 backdrop-blur-md duration-200 md:hidden"
+          className="animate-in fade-in fixed inset-x-0 bottom-0 top-[calc(3.5rem+4px)] z-40 overflow-y-auto bg-black/95 backdrop-blur-md duration-200 lg:hidden"
           onClick={() => setMenuOpen(false)}
         >
           <nav className="flex flex-col px-4 py-4">
@@ -322,7 +374,7 @@ const FOOTER_COLUMNS = [
   { title: "ZAP Cinemas", links: ["Em Cartaz", "IMAX", "Serviços", "Campanhas", "Preçário"] },
   {
     title: "Bilheteira",
-    links: ["Comprar bilhetes", "Escolha de lugares", "Sala VIP", "Sala IMAX"],
+    links: ["Os meus bilhetes", "Comprar bilhetes", "Escolha de lugares", "Sala VIP", "Sala IMAX"],
   },
   { title: "Ajuda", links: ["FAQs", "Contactos", "Termos e Condições"] },
 ];
@@ -342,6 +394,10 @@ function SiteFooter() {
                     <li key={l}>
                       {l === "Preçário" ? (
                         <Link to="/precario" className="transition hover:text-primary">
+                          {l}
+                        </Link>
+                      ) : l === "Os meus bilhetes" ? (
+                        <Link to="/bilhetes" className="transition hover:text-primary">
                           {l}
                         </Link>
                       ) : (
@@ -399,7 +455,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Starfield />
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col overflow-x-clip">
         <SiteHeader />
         <main className="flex-1">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}

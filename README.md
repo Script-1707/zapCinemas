@@ -5,8 +5,8 @@ Front-end de um site de cinema com a identidade visual da **ZAP Cinemas**
 escolha de dia, sessão e lugares, e preçário.
 
 > **Demonstração:** é só front-end. Os filmes, as sessões e os lugares ocupados
-> são dados de exemplo gerados no próprio código; não há pagamentos nem
-> reservas reais.
+> são dados de exemplo gerados no próprio código. Os pagamentos são simulados e
+> as compras ficam guardadas no browser (`localStorage`) do dispositivo.
 
 ---
 
@@ -26,9 +26,36 @@ escolha de dia, sessão e lugares, e preçário.
    e nome da tarifa aplicada.
 4. **Escolha de lugares** (`/bilheteria/:slug/:sessaoId/lugares`): mapa da
    sala (filas A–J, 14 lugares por fila, corredor central), lugares ocupados,
-   máximo de 6 lugares por reserva, total actualizado ao vivo.
-5. **Reserva confirmada:** resumo com código `ZAP-00000` para apresentar na
-   bilheteira.
+   máximo de 6 lugares por compra, total actualizado ao vivo. Os lugares já
+   comprados neste dispositivo aparecem ocupados.
+5. **Pagamento** (`/bilheteria/:slug/:sessaoId/pagamento?lugares=A1,A2`):
+   resumo da compra, nome e telemóvel (+244, 9 dígitos a começar por 9) e
+   escolha do método:
+   - **Multicaixa Express:** pedido enviado para o telemóvel e ecrã de espera
+     pela confirmação na app (simulada ao fim de 5 segundos). Os bilhetes ficam
+     logo disponíveis.
+   - **Pagamento por Referência:** gera Entidade, Referência e Montante, válidos
+     por 24 horas. A compra fica "Aguarda pagamento" e os lugares ficam
+     reservados. O botão **Simular pagamento** confirma o pagamento.
+6. **Os meus bilhetes** (`/bilhetes`): lista das compras deste dispositivo,
+   separada em próximas sessões e sessões anteriores, com o estado (Pago /
+   Aguarda pagamento). Acessível pelo ícone 🎫 no cabeçalho (com o número de
+   compras), pelo menu e pelo rodapé.
+7. **Detalhe da compra** (`/bilhetes/:codigo`): um bilhete por lugar (filme,
+   data, hora, sala, fila, lugar e código de validação), ou os dados da
+   referência quando o pagamento está pendente, e o resumo da compra.
+
+#### Pagamentos reais
+
+Toda a lógica de compras está em
+[`src/data/bookings.ts`](src/data/bookings.ts) (`addBooking`,
+`markBookingPaid`, `newPaymentReference`…). Para produção, estas funções devem
+passar a chamar a API da bilheteira e de um fornecedor de pagamentos (EMIS /
+banco). Valores de demonstração a substituir:
+
+- Entidade `12345` (`DEMO_ENTITY`) e números de referência aleatórios.
+- O código de validação de cada bilhete tem o aspecto de um QR, mas é
+  decorativo: não é legível por um leitor de QR.
 
 ### Preçário (`/precario`)
 
@@ -82,13 +109,12 @@ tokens estão em [`src/styles.css`](src/styles.css).
 
 ### Animações
 
-- Banner em carrossel automático (pára ao passar o rato ou ao tocar), zoom
-  lento na imagem, feixes de projector e partículas de confetti.
+- Banner em carrossel automático (pára ao passar o rato ou ao tocar) com zoom
+  lento na imagem.
 - Céu estrelado de fundo em todas as páginas: três camadas de estrelas que
   cintilam e deslizam, e estrelas cadentes ocasionais.
 - Entradas em cascata nos cartazes, sessões e cartões do preçário; brilho a
-  passar nos botões de compra; lugares com efeito "pop" ao seleccionar;
-  confetti na confirmação da reserva.
+  passar nos botões de compra; lugares com efeito "pop" ao seleccionar.
 - Quem tem activada a opção do sistema **reduzir movimento** vê o site sem
   animações.
 
@@ -101,7 +127,7 @@ O site foi ajustado para telemóvel (testado a 360px e 390px) e tablet (768px):
 - Atalhos numa linha e filtro de dias com deslize horizontal.
 - Título e género por baixo de cada cartaz.
 - Mapa de lugares que cabe no ecrã (14 lugares por fila) e barra fixa em baixo
-  com os lugares escolhidos, o total e o botão **Confirmar**.
+  com os lugares escolhidos, o total e o botão **Continuar**.
 - Preçário em duas colunas; rodapé compacto.
 - Ícone e nome "ZAP Cinemas" ao adicionar o site ao ecrã inicial
   ([`public/site.webmanifest`](public/site.webmanifest)).
@@ -117,16 +143,22 @@ src/
 │   ├── index.tsx                           # Em exibição (página inicial)
 │   ├── filmes.$slug.tsx                    # Detalhes do filme e trailer
 │   ├── bilheteria.$slug.index.tsx          # Escolha do dia e da sessão
-│   ├── bilheteria.$slug.$sessaoId.lugares.tsx  # Mapa de lugares e confirmação
+│   ├── bilheteria.$slug.$sessaoId.lugares.tsx    # Mapa de lugares
+│   ├── bilheteria.$slug.$sessaoId.pagamento.tsx  # Pagamento (Express / Referência)
+│   ├── bilhetes.index.tsx                  # Os meus bilhetes
+│   ├── bilhetes.$codigo.tsx                # Detalhe da compra e bilhetes
 │   └── precario.tsx                        # Preçário
 ├── components/
 │   ├── seat-map.tsx                        # Mapa da sala
+│   ├── ticket.tsx                          # Bilhete individual
+│   ├── status-badge.tsx                    # Estado da compra (Pago / Aguarda)
 │   ├── age-badge.tsx                       # Classificação etária
 │   └── ui/                                 # Componentes base (shadcn/ui)
 ├── data/
 │   ├── movies.ts                           # Filmes (exemplo)
 │   ├── sessions.ts                         # Sessões, tarifas, lugares ocupados
-│   └── prices.ts                           # Preçário ZAP Cinemas
+│   ├── prices.ts                           # Preçário ZAP Cinemas
+│   └── bookings.ts                         # Compras, pagamentos e referências
 ├── assets/posters/                         # Cartazes dos filmes de exemplo
 └── styles.css                              # Tokens da marca e animações
 public/                                     # Ícones, manifest, robots.txt

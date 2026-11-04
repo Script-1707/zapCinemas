@@ -291,20 +291,6 @@
   }
 }
 
-@keyframes drift {
-  0% {
-    transform: translate3d(0, 20px, 0) rotate(0deg);
-    opacity: 0;
-  }
-  15% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate3d(30px, -420px, 0) rotate(260deg);
-    opacity: 0;
-  }
-}
-
 @keyframes shine {
   0% {
     transform: translateX(-120%) skewX(-20deg);
@@ -355,17 +341,6 @@
   }
   75% {
     transform: rotate(8deg);
-  }
-}
-
-@keyframes confetti-fall {
-  0% {
-    transform: translate3d(0, -20px, 0) rotate(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate3d(var(--x, 0), 420px, 0) rotate(720deg);
-    opacity: 0;
   }
 }
 
@@ -452,28 +427,6 @@
     animation-direction: reverse;
   }
 
-  /* Partículas de confetti a subir no banner */
-  .particle {
-    position: absolute;
-    bottom: -10px;
-    width: 8px;
-    height: 3px;
-    border-radius: 2px;
-    pointer-events: none;
-    animation: drift var(--duration, 9s) linear infinite;
-    animation-delay: var(--delay, 0s);
-  }
-
-  .confetti {
-    position: absolute;
-    top: 0;
-    width: 8px;
-    height: 12px;
-    pointer-events: none;
-    animation: confetti-fall var(--duration, 2.4s) cubic-bezier(0.2, 0.6, 0.4, 1) both;
-    animation-delay: var(--delay, 0s);
-  }
-
   /* Reflexo de luz a passar sobre botões e cartazes */
   .shine {
     position: relative;
@@ -523,7 +476,6 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .particle,
   .spotlight {
     display: none;
   }

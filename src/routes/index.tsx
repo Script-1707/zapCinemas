@@ -32,14 +32,6 @@ const HERO_INTERVAL_MS = 6500;
 
 const BRAND_COLORS = ["#c70d6a", "#5a4a9a", "#0c76bc", "#81a560", "#f5d008"];
 
-/** Partículas fixas (determinísticas para não variar entre servidor e cliente). */
-const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
-  left: `${(i * 37) % 100}%`,
-  color: BRAND_COLORS[i % BRAND_COLORS.length],
-  duration: `${8 + ((i * 7) % 7)}s`,
-  delay: `${-((i * 1.3) % 9)}s`,
-}));
-
 /** Fita diagonal de sala especial (SALA IMAX / SALA VIP) para o filme. */
 function roomRibbon(movie: Movie, dayOffset: number | null): string | null {
   const offsets = dayOffset === null ? getDays().map((d) => d.offset) : [dayOffset];
@@ -114,26 +106,6 @@ function Index() {
           </div>
         ))}
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/85 via-black/40 to-black/75" />
-
-        {/* Feixes de projector e confetti */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <span className="spotlight spotlight-magenta left-[5%]" />
-          <span className="spotlight spotlight-blue right-[5%]" />
-          {PARTICLES.map((p, i) => (
-            <span
-              key={i}
-              className="particle"
-              style={
-                {
-                  left: p.left,
-                  background: p.color,
-                  "--duration": p.duration,
-                  "--delay": p.delay,
-                } as CSSProperties
-              }
-            />
-          ))}
-        </div>
 
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-14 pt-10 sm:px-8 sm:py-14 lg:px-14 md:grid-cols-[1fr_280px] md:py-20">
           <div key={featured.slug} className="flex flex-col gap-4 sm:gap-5">

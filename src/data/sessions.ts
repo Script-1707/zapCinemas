@@ -175,7 +175,14 @@ export function getOccupiedSeats(sessionId: string): Set<string> {
   return occupied;
 }
 
-export function ticketCode(sessionId: string, seats: string[]): string {
-  const n = hashString(`${sessionId}|${[...seats].sort().join(",")}`) % 100000;
-  return `ZAP-${String(n).padStart(5, "0")}`;
+/** "A1,b2, A1" → ["A1", "B2"]: só lugares que existem na sala, sem repetidos. */
+export function parseSeatList(value: string): string[] {
+  const valid = new Set(
+    SEAT_ROWS.flatMap((row) => Array.from({ length: SEATS_PER_ROW }, (_, i) => `${row}${i + 1}`)),
+  );
+  const seats = value
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => valid.has(s));
+  return [...new Set(seats)];
 }

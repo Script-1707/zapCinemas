@@ -1,12 +1,18 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { getMovie } from "@/data/movies";
-import { formatPrice, getDays, getOccupiedSeats, getSession, ticketCode } from "@/data/sessions";
+import { formatPrice, getDays, getOccupiedSeats, getSession, parseSeatList } from "@/data/sessions";
+import { reservedSeats, useBookings } from "@/data/bookings";
 import { SeatMap } from "@/components/seat-map";
 
-const MAX_SEATS = 6;
+export const MAX_SEATS = 6;
 
 export const Route = createFileRoute("/bilheteria/$slug/$sessaoId/lugares")({
+  // ?lugares=A1,A2 — reabre a página com os lugares já escolhidos (ao voltar do pagamento).
+  validateSearch: (search: Record<string, unknown>): { lugares?: string } =>
+    typeof search["lugares"] === "string" && search["lugares"]
+      ? { lugares: search["lugares"] }
+      : {},
   loader: ({ params }) => {
     const session = getSession(params.sessaoId);
     if (!session || session.movieSlug !== params.slug) throw notFound();
@@ -35,164 +41,50 @@ export const Route = createFileRoute("/bilheteria/$slug/$sessaoId/lugares")({
   component: SeatPicker,
 });
 
-function CheckIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-8 w-8"
-      aria-hidden
-    >
-      <path d="M4 12.5l5 5L20 7" />
-    </svg>
-  );
-}
-
-const CONFETTI_COLORS = ["#c70d6a", "#5a4a9a", "#0c76bc", "#81a560", "#f5d008"];
-const CONFETTI = Array.from({ length: 40 }, (_, i) => ({
-  left: `${(i * 23) % 100}%`,
-  x: `${((i * 53) % 160) - 80}px`,
-  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-  delay: `${(i % 10) * 0.08}s`,
-  duration: `${2 + (i % 5) * 0.35}s`,
-}));
-
-function ConfettiBurst() {
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 h-[480px] overflow-hidden"
-    >
-      {CONFETTI.map((c, i) => (
-        <span
-          key={i}
-          className="confetti"
-          style={
-            {
-              left: c.left,
-              background: c.color,
-              "--x": c.x,
-              "--delay": c.delay,
-              "--duration": c.duration,
-            } as CSSProperties
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
 function SeatPicker() {
   const { session, movie } = Route.useLoaderData();
-  const occupied = useMemo(() => getOccupiedSeats(session.id), [session.id]);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [confirmed, setConfirmed] = useState(false);
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const bookings = useBookings();
+
+  // Lugares ocupados = ocupação simulada da sala + lugares já comprados neste dispositivo.
+  const occupied = useMemo(() => {
+    const set = getOccupiedSeats(session.id);
+    for (const seat of reservedSeats(bookings, session.id)) set.add(seat);
+    return set;
+  }, [session.id, bookings]);
+
+  const [picked, setPicked] = useState<string[]>(() =>
+    parseSeatList(search["lugares"] ?? "").slice(0, MAX_SEATS),
+  );
+  // Um lugar que entretanto ficou ocupado deixa de contar como escolhido.
+  const selected = picked.filter((s) => !occupied.has(s));
 
   const days = getDays();
   const day = days[session.dayOffset];
   const dayLabel = day ? `${day.label} · ${day.day} ${day.month}` : "Sessão";
 
   const toggle = (seat: string) => {
-    if (confirmed) return;
-    setSelected((prev) =>
-      prev.includes(seat)
-        ? prev.filter((s) => s !== seat)
-        : prev.length >= MAX_SEATS
-          ? prev
-          : [...prev, seat],
-    );
+    setPicked((prev) => {
+      const current = prev.filter((s) => !occupied.has(s));
+      return current.includes(seat)
+        ? current.filter((s) => s !== seat)
+        : current.length >= MAX_SEATS
+          ? current
+          : [...current, seat];
+    });
   };
 
   const total = selected.length * session.price;
 
-  // No telemóvel o botão está no fundo da página: ao confirmar, volta ao topo.
-  useEffect(() => {
-    if (confirmed) window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [confirmed]);
-  const code = confirmed ? ticketCode(session.id, selected) : "";
-
-  if (confirmed) {
-    return (
-      <div className="relative mx-auto max-w-2xl px-4 py-10 text-center sm:py-16">
-        <ConfettiBurst />
-        <div className="animate-pop mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
-          <CheckIcon />
-        </div>
-        <h1
-          className="animate-fade-up mt-6 font-display text-4xl leading-none sm:text-5xl"
-          style={{ "--delay": "150ms" } as CSSProperties}
-        >
-          Reserva confirmada!
-        </h1>
-        <p className="mt-3 text-muted-foreground">
-          Apresente o código na bilheteira até 30 minutos antes da sessão.
-        </p>
-        <div
-          className="animate-poster-in mt-8 rounded-sm border border-primary/40 bg-card p-6 text-left glow-marquee"
-          style={{ "--delay": "300ms" } as CSSProperties}
-        >
-          <p className="text-center font-display text-3xl tracking-[0.3em] text-primary">{code}</p>
-          <dl className="mt-6 grid gap-3 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Filme</dt>
-              <dd className="text-right font-medium">{movie.title}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Dia e horário</dt>
-              <dd className="text-right font-medium">
-                {dayLabel} · {session.time}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Formato</dt>
-              <dd className="text-right font-medium">{session.format}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Sala</dt>
-              <dd className="text-right font-medium">{session.room}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Lugares</dt>
-              <dd className="text-right font-medium">{selected.join(", ")}</dd>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-border pt-3">
-              <dt className="text-muted-foreground">Total</dt>
-              <dd className="font-display text-2xl normal-case!">{formatPrice(total)}</dd>
-            </div>
-          </dl>
-        </div>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-          <Link
-            to="/bilheteria/$slug"
-            params={{ slug: movie.slug }}
-            className="rounded-sm bg-primary px-5 py-3 font-display text-lg tracking-wide text-primary-foreground transition hover:brightness-110"
-          >
-            Escolher outra sessão
-          </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setConfirmed(false);
-              setSelected([]);
-            }}
-            className="rounded-sm border border-border px-5 py-3 font-display text-lg tracking-wide text-foreground transition hover:border-primary hover:text-primary"
-          >
-            Comprar mais lugares
-          </button>
-          <Link
-            to="/"
-            className="rounded-sm border border-border px-5 py-3 font-display text-lg tracking-wide text-muted-foreground transition hover:border-primary hover:text-primary"
-          >
-            Voltar ao cartaz
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const goToPayment = () => {
+    if (selected.length === 0) return;
+    void navigate({
+      to: "/bilheteria/$slug/$sessaoId/pagamento",
+      params: { slug: movie.slug, sessaoId: session.id },
+      search: { lugares: selected.join(",") },
+    });
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-4 pt-6 sm:pt-10 lg:pb-20">
@@ -281,10 +173,10 @@ function SeatPicker() {
           <button
             type="button"
             disabled={selected.length === 0}
-            onClick={() => setConfirmed(true)}
+            onClick={goToPayment}
             className={`shine mt-4 hidden w-full lg:block rounded-sm bg-primary px-4 py-3 font-display text-xl tracking-wide text-primary-foreground transition enabled:hover:-translate-y-0.5 enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 ${selected.length > 0 ? "shine-loop" : ""}`}
           >
-            Confirmar reserva
+            Continuar para pagamento
           </button>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Máximo de {MAX_SEATS} lugares por reserva.
@@ -307,10 +199,10 @@ function SeatPicker() {
         <button
           type="button"
           disabled={selected.length === 0}
-          onClick={() => setConfirmed(true)}
+          onClick={goToPayment}
           className={`shine shrink-0 rounded-sm bg-primary px-5 py-3 font-display text-base text-primary-foreground transition disabled:opacity-40 ${selected.length > 0 ? "shine-loop" : ""}`}
         >
-          Confirmar
+          Continuar
         </button>
       </div>
     </div>
